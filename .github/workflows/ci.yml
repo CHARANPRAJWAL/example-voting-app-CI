@@ -54,16 +54,28 @@ jobs:
           fi
 
           # Convert to JSON array format
-          JSON_SERVICES=$(echo "$SERVICES" | sed 's/^/["/; s/ /","/g; s/$/"]/')
+          if [ -z "$SERVICES" ]; then
+            JSON_SERVICES='[]'
+          else
+            JSON_SERVICES=$(echo "$SERVICES" | sed 's/^/["/; s/ /","/g; s/$/"]/')
+          fi
+          echo "Services to build: $SERVICES"
+          echo "JSON format: $JSON_SERVICES"
           echo "services=$JSON_SERVICES" >> $GITHUB_OUTPUT
 
   build-and-push:
     needs: detect-changes
     runs-on: ubuntu-latest
+    if: needs.detect-changes.outputs.services != '[]'
     strategy:
       matrix:
         service: ${{ fromJson(needs.detect-changes.outputs.services) }}
     steps:
+      - name: Debug matrix input
+        run: |
+          echo "Matrix service value: '${{ matrix.service }}'"
+          echo "Matrix service length: ${#matrix.service}"
+          echo "Matrix service type: $(echo '${{ matrix.service }}' | jq -r 'type' 2>/dev/null || echo 'not json')"
     
       - name: Debug selected service
         run: "echo Selected service: ${{ matrix.service }}"
