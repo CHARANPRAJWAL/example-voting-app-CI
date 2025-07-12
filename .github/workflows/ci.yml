@@ -79,9 +79,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:latest \
-                       -t ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:${{ github.sha }} \
-                       ./${{ matrix.service }}
+          docker build -t ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:latest -t ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:${{ github.sha }} ./${{ matrix.service }}
 
       - name: Push Docker images
         run: |
@@ -91,8 +89,7 @@ jobs:
       - name: Get image digest
         id: get_digest
         run: |
-          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' \
-            ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:${{ github.sha }})
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:${{ github.sha }})
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Checkout CD repo
