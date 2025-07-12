@@ -1,4 +1,4 @@
-name: CI Build and Deploy
+name: CI Build and Deploy.
 
 on:
   push:
@@ -45,17 +45,18 @@ jobs:
           token: ${{ secrets.CD_REPO_TOKEN }}
           path: cd-repo
 
+      - name: List manifest file
+        run: |
+          ls -l cd-repo
+          cat cd-repo/${{ matrix.service }}-manifest.yaml
+
       - name: Update image tag in CD repo
         run: |
-          # Update the correct manifest file for each service
           manifest_file="cd-repo/${{ matrix.service }}-manifest.yaml"
           sed -i "s|image:.*|image: ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}@${{ steps.get_digest.outputs.digest }}|" "$manifest_file"
-          cd cd-repo
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add "$manifest_file"
-          git commit -m "Update ${{ matrix.service }} image to ${{ steps.get_digest.outputs.digest }}"
-          git push
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git -C cd-repo add "$manifest_file"
+          git -C cd-repo commit -m "Update ${{ matrix.service }} image to ${{ steps.get_digest.outputs.digest }}"
+          git -C cd-repo push
 
-      - name: List files in cd-repo
-        run: ls -l cd-repo
