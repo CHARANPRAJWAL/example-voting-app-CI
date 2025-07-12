@@ -113,4 +113,6 @@ jobs:
           git config --global user.email "github-actions@github.com"
           git -C cd-repo add "$manifest_file"
           git -C cd-repo commit -m "Update ${{ matrix.service }} image to ${{ steps.get_digest.outputs.digest }}"
+          git -C cd-repo pull --rebase
           git -C cd-repo push
+
