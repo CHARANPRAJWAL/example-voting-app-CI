@@ -23,13 +23,12 @@ jobs:
       - name: Detect changed services
         id: changes
         run: |
-          # Get list of changed files for push events
+          # Get list of changed files
           CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
 
           echo "Changed files:"
           echo "$CHANGED_FILES"
 
-          # Initialize services array
           SERVICES=""
 
           if echo "$CHANGED_FILES" | grep -q "^vote/"; then
@@ -44,16 +43,17 @@ jobs:
             SERVICES="$SERVICES worker"
           fi
 
-          # If no specific service changes, but CI workflow changed, build all
+          # If workflow changed, build all
           if [ -z "$SERVICES" ] && echo "$CHANGED_FILES" | grep -q "^\.github/workflows/ci\.yml$"; then
             SERVICES="vote result worker"
           fi
 
-          # Fallback: build all services
+          # Fallback
           if [ -z "$SERVICES" ]; then
             SERVICES="vote result worker"
           fi
 
+          # Convert to JSON array
           JSON_SERVICES=$(echo "$SERVICES" | jq -cR 'split(" ")')
           echo "services=$JSON_SERVICES" >> $GITHUB_OUTPUT
 
@@ -64,6 +64,9 @@ jobs:
       matrix:
         service: ${{ fromJson(needs.detect-changes.outputs.services) }}
     steps:
+      - name: Debug selected service
+        run: echo "Selected service: ${{ matrix.service }}"
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -80,7 +83,7 @@ jobs:
                        -t ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:${{ github.sha }} \
                        ./${{ matrix.service }}
 
-      - name: Push Docker images (latest and commit SHA)
+      - name: Push Docker images
         run: |
           docker push ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:latest
           docker push ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:${{ github.sha }}
@@ -115,4 +118,3 @@ jobs:
           git -C cd-repo commit -m "Update ${{ matrix.service }} image to ${{ steps.get_digest.outputs.digest }}"
           git -C cd-repo pull --rebase
           git -C cd-repo push
-
