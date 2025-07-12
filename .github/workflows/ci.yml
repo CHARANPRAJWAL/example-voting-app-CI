@@ -56,3 +56,6 @@ jobs:
           git add "$manifest_file"
           git commit -m "Update ${{ matrix.service }} image to ${{ steps.get_digest.outputs.digest }}"
           git push
+
+      - name: List files in cd-repo
+        run: ls -l cd-repo
