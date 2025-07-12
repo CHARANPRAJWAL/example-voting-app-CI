@@ -54,9 +54,8 @@ jobs:
             SERVICES="vote result worker"
           fi
 
-          # Convert space-separated string to JSON array
-          JSON_SERVICES=$(echo "$SERVICES" | jq -R 'split(" ")')
-          echo "services=${JSON_SERVICES}" >> $GITHUB_OUTPUT
+          JSON_SERVICES=$(echo "$SERVICES" | jq -cR 'split(" ")')
+          echo "services=$JSON_SERVICES" >> $GITHUB_OUTPUT
 
   build-and-push:
     needs: detect-changes
