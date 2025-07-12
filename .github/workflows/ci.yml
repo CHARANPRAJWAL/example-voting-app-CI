@@ -74,7 +74,7 @@ jobs:
       - name: Debug matrix input
         run: |
           echo "Matrix service value: '${{ matrix.service }}'"
-          echo "Matrix service length: ${#matrix.service}"
+          echo "Matrix service length: $(echo '${{ matrix.service }}' | wc -c)"
           echo "Matrix service type: $(echo '${{ matrix.service }}' | jq -r 'type' 2>/dev/null || echo 'not json')"
     
       - name: Debug selected service
