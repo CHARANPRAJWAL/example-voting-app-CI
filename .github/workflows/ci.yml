@@ -50,9 +50,16 @@ jobs:
           ls -l cd-repo
           cat cd-repo/${{ matrix.service }}-manifest.yaml
 
-      - name: Update image tag in CD repo
+      - name: Locate manifest and update image
         run: |
           manifest_file="cd-repo/${{ matrix.service }}-manifest.yaml"
+          if [ ! -f "$manifest_file" ]; then
+            echo "ERROR: Manifest file $manifest_file not found!"
+            echo "Available files:"
+            find cd-repo -type f
+            exit 1
+          fi
+
           sed -i "s|image:.*|image: ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}@${{ steps.get_digest.outputs.digest }}|" "$manifest_file"
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
