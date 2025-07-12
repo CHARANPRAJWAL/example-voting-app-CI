@@ -64,8 +64,10 @@ jobs:
       matrix:
         service: ${{ fromJson(needs.detect-changes.outputs.services) }}
     steps:
+    
       - name: Debug selected service
-        run: echo "Selected service: ${{ matrix.service }}"
+        run: "echo Selected service: ${{ matrix.service }}"
+
 
       - name: Checkout code
         uses: actions/checkout@v4
