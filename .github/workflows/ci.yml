@@ -53,8 +53,8 @@ jobs:
             SERVICES="vote result worker"
           fi
 
-          # Convert to JSON array
-          JSON_SERVICES=$(echo "$SERVICES" | jq -cR 'split(" ")')
+          # Convert to JSON array format
+          JSON_SERVICES=$(echo "$SERVICES" | sed 's/^/["/; s/ /","/g; s/$/"]/')
           echo "services=$JSON_SERVICES" >> $GITHUB_OUTPUT
 
   build-and-push:
