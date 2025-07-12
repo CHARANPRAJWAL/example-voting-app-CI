@@ -25,17 +25,17 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/${{ github.repository }}/${{ matrix.service }}:latest -t ghcr.io/${{ github.repository }}/${{ matrix.service }}:${{ github.sha }} ./${{ matrix.service }}
+          docker build -t ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:latest -t ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:${{ github.sha }} ./${{ matrix.service }}
 
       - name: Push Docker images (latest and commit SHA)
         run: |
-          docker push ghcr.io/${{ github.repository }}/${{ matrix.service }}:latest
-          docker push ghcr.io/${{ github.repository }}/${{ matrix.service }}:${{ github.sha }}
+          docker push ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:latest
+          docker push ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:${{ github.sha }}
 
       - name: Get image digest
         id: get_digest
         run: |
-          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/${{ github.repository }}/${{ matrix.service }}:${{ github.sha }})
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:${{ github.sha }})
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Checkout CD repo
@@ -49,7 +49,7 @@ jobs:
         run: |
           # Update the correct manifest file for each service
           manifest_file="cd-repo/${{ matrix.service }}-manifest.yaml"
-          sed -i "s|image:.*|image: ghcr.io/${{ github.repository }}/${{ matrix.service }}@${{ steps.get_digest.outputs.digest }}|" "$manifest_file"
+          sed -i "s|image:.*|image: ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}@${{ steps.get_digest.outputs.digest }}|" "$manifest_file"
           cd cd-repo
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
