@@ -25,47 +25,45 @@ jobs:
         run: |
           # Get list of changed files for push events
           CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
-          
+
           echo "Changed files:"
           echo "$CHANGED_FILES"
-          
+
           # Initialize services array
           SERVICES=""
-          
-          # Check if vote service has changes
+
           if echo "$CHANGED_FILES" | grep -q "^vote/"; then
             SERVICES="$SERVICES vote"
           fi
-          
-          # Check if result service has changes
+
           if echo "$CHANGED_FILES" | grep -q "^result/"; then
             SERVICES="$SERVICES result"
           fi
-          
-          # Check if worker service has changes
+
           if echo "$CHANGED_FILES" | grep -q "^worker/"; then
             SERVICES="$SERVICES worker"
           fi
-          
-          # If no specific service changes, but CI workflow changed, build all services
+
+          # If no specific service changes, but CI workflow changed, build all
           if [ -z "$SERVICES" ] && echo "$CHANGED_FILES" | grep -q "^\.github/workflows/ci\.yml$"; then
             SERVICES="vote result worker"
           fi
-          
-          # If still empty, default to all services (fallback)
+
+          # Fallback: build all services
           if [ -z "$SERVICES" ]; then
             SERVICES="vote result worker"
           fi
-          
-          echo "Services to build: $SERVICES"
-          echo "services=$SERVICES" >> $GITHUB_OUTPUT
+
+          # Convert space-separated string to JSON array
+          JSON_SERVICES=$(echo "$SERVICES" | jq -R 'split(" ")')
+          echo "services=${JSON_SERVICES}" >> $GITHUB_OUTPUT
 
   build-and-push:
     needs: detect-changes
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: ${{ fromJson(format('[{0}]', needs.detect-changes.outputs.services)) }}
+        service: ${{ fromJson(needs.detect-changes.outputs.services) }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -79,7 +77,9 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:latest -t ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:${{ github.sha }} ./${{ matrix.service }}
+          docker build -t ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:latest \
+                       -t ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:${{ github.sha }} \
+                       ./${{ matrix.service }}
 
       - name: Push Docker images (latest and commit SHA)
         run: |
@@ -89,7 +89,8 @@ jobs:
       - name: Get image digest
         id: get_digest
         run: |
-          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:${{ github.sha }})
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' \
+            ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:${{ github.sha }})
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Checkout CD repo
@@ -107,13 +108,10 @@ jobs:
       - name: Update image tag in CD repo
         run: |
           manifest_file="${{ matrix.service }}-manifest.yaml"
+          sed -i "s|image:.*|image: ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}@${{ steps.get_digest.outputs.digest }}|" "cd-repo/$manifest_file"
 
-          sed -i "s|image:.*|image: ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}@${{ steps.get_digest.outputs.digest }}|" "$full_path"
-          
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git -C cd-repo add "$manifest_file"
           git -C cd-repo commit -m "Update ${{ matrix.service }} image to ${{ steps.get_digest.outputs.digest }}"
           git -C cd-repo push
-
-
