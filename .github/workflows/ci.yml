@@ -124,7 +124,7 @@ jobs:
       - name: Update image tag in CD repo
         run: |
           manifest_file="${{ matrix.service }}-manifest.yaml"
-          sed -i "s|image:.*|image: ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}@$DIGEST_HASH|" "cd-repo/$manifest_file"
+          sed -i "s|image:.*|image: ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}@${{ steps.get_digest.outputs.digest }}|" "cd-repo/$manifest_file"
 
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
