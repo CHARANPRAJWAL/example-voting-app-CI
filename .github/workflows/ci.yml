@@ -104,7 +104,8 @@ jobs:
       - name: Get image digest
         id: get_digest
         run: |
-          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:${{ github.sha }})
+          SHORT_SHA=${GITHUB_SHA::7}
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:$SHORT_SHA)
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Checkout CD repo
