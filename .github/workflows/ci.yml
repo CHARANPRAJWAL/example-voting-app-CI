@@ -29,21 +29,22 @@ jobs:
           echo "Changed files:"
           echo "$CHANGED_FILES"
 
+          # Initialize
           SERVICES=""
 
           if echo "$CHANGED_FILES" | grep -q "^vote/"; then
-            SERVICES="$SERVICES vote"
+            SERVICES="${SERVICES:+$SERVICES }vote"
           fi
 
           if echo "$CHANGED_FILES" | grep -q "^result/"; then
-            SERVICES="$SERVICES result"
+            SERVICES="${SERVICES:+$SERVICES }result"
           fi
 
           if echo "$CHANGED_FILES" | grep -q "^worker/"; then
-            SERVICES="$SERVICES worker"
+            SERVICES="${SERVICES:+$SERVICES }worker"
           fi
 
-          # If workflow changed, build all
+          # Workflow changed → build all
           if [ -z "$SERVICES" ] && echo "$CHANGED_FILES" | grep -q "^\.github/workflows/ci\.yml$"; then
             SERVICES="vote result worker"
           fi
@@ -53,15 +54,12 @@ jobs:
             SERVICES="vote result worker"
           fi
 
-          # Convert to JSON array format
-          if [ -z "$SERVICES" ]; then
-            JSON_SERVICES='[]'
-          else
-            JSON_SERVICES=$(echo "$SERVICES" | sed 's/^/["/; s/ /","/g; s/$/"]/')
-          fi
+          # Convert to JSON array (compact)
+          JSON_SERVICES=$(echo "$SERVICES" | jq -cR 'split(" ")')
           echo "Services to build: $SERVICES"
           echo "JSON format: $JSON_SERVICES"
           echo "services=$JSON_SERVICES" >> $GITHUB_OUTPUT
+
 
   build-and-push:
     needs: detect-changes
