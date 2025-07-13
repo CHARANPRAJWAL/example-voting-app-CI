@@ -91,12 +91,15 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:latest -t ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:${{ github.sha }} ./${{ matrix.service }}
+          SHORT_SHA=${GITHUB_SHA::7}
+          docker build -t ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:latest \
+                       -t ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:$SHORT_SHA ./${{ matrix.service }}
 
       - name: Push Docker images
         run: |
+          SHORT_SHA=${GITHUB_SHA::7}
           docker push ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:latest
-          docker push ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:${{ github.sha }}
+          docker push ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:$SHORT_SHA
 
       - name: Get image digest
         id: get_digest
