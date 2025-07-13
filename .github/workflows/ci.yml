@@ -106,7 +106,8 @@ jobs:
         run: |
           SHORT_SHA=${GITHUB_SHA::7}
           DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}:$SHORT_SHA)
-          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+          DIGEST_HASH=$(echo "$DIGEST" | cut -d'@' -f2)
+          echo "digest=$DIGEST_HASH" >> $GITHUB_OUTPUT
 
       - name: Checkout CD repo
         uses: actions/checkout@v4
@@ -123,7 +124,7 @@ jobs:
       - name: Update image tag in CD repo
         run: |
           manifest_file="${{ matrix.service }}-manifest.yaml"
-          sed -i "s|image:.*|image: ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}@${{ steps.get_digest.outputs.digest }}|" "cd-repo/$manifest_file"
+          sed -i "s|image:.*|image: ghcr.io/charanprajwal/example-voting-app-ci/${{ matrix.service }}@$DIGEST_HASH|" "cd-repo/$manifest_file"
 
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
